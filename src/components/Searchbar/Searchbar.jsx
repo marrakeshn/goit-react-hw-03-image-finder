@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import styles from './Searchbar.module.css';
 import PropTypes from 'prop-types';
+import { Notify } from 'notiflix';
 
 export class Searchbar extends Component {
   state = {
@@ -9,9 +10,11 @@ export class Searchbar extends Component {
 
   onSubmitForm = event => {
     event.preventDefault();
-
+    if (this.state.value === '') {
+      Notify.failure('please enter any query');
+      return;
+    }
     this.props.onSubmit(this.state.value);
-    this.onReset(event);
   };
 
   onChangeInput = event => {
@@ -20,10 +23,7 @@ export class Searchbar extends Component {
     });
   };
 
-  onReset = event => {
-    this.setState({ value: '' });
-    event.target.reset();
-  };
+ 
 
   render() {
     return (
