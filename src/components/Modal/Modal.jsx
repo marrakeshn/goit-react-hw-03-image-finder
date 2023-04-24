@@ -1,36 +1,31 @@
 import PropTypes from 'prop-types';
-import { Component } from 'react';
+import React, { Component } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './Modal.module.css';
 
-const modalRoot = document.querySelector('#modal-root');
+const modalRoot = document.querySelector('#modalRoot');
 
-export class Modal extends Component {
+
+export default class Modal extends Component {
   componentDidMount() {
-    window.addEventListener('keydown', this.onCloseModal);
+    window.addEventListener('keydown', this.handleKeyDown);
   }
 
   componentWillUnmount() {
-    window.removeEventListener('keydown', this.onCloseModal);
+    window.removeEventListener('keydown', this.handleKeyDown);
   }
 
-  onCloseModal = event => {
-    if (event.code === 'Escape') {
-      this.props.onToggleModal();
-    }
-  };
-
-  onBackdropCloseModal = event => {
-    if (event.target === event.currentTarget) {
-      this.props.onToggleModal();
+  handleKeyDown = e => {
+    if (e.code === 'Escape') {
+      return this.props.onClose();
     }
   };
 
   render() {
     return createPortal(
-      <div className={styles.overlay} onClick={this.onBackdropCloseModal}>
+      <div className={styles.overlay}>
         <div className={styles.modal}>
-          <img src={this.props.img} alt="" />
+          <img src={this.props.pic} alt="" />
         </div>
       </div>,
       modalRoot
@@ -39,6 +34,6 @@ export class Modal extends Component {
 }
 
 Modal.propTypes = {
-  onToggleModal: PropTypes.func.isRequired,
-  img: PropTypes.string.isRequired,
+  onClose: PropTypes.func.isRequired,
+  pic: PropTypes.string.isRequired,
 };
