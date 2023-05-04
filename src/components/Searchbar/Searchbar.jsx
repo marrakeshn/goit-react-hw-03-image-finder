@@ -1,44 +1,47 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types'; 
-import styles from './Searchbar.module.css'
+import { FcSearch } from 'react-icons/fc';
+import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
 
-export default class Searchbar extends Component {
+export class Searchbar extends Component {
   state = {
-    query: '',
+    search: '',
   };
 
-  handleInputChange = e => {
-    this.setState({ query: e.target.value.toLowerCase() });
+  handleChange = e => {
+    this.setState({ search: e.currentTarget.value });
   };
 
-  handleSubmit = event => {
-    event.preventDefault();
-    if (this.state.query.trim() === '') {
-      toast.error('Enter your search query');
-      return;
+  handleSubmit = e => {
+    const { search } = this.state;
+    e.preventDefault();
+    if (search.trim() === '') {
+      return toast.error('Value cannot be an empty string');
     }
-    this.props.onSubmit(this.state.query);
+    this.props.onSubmit(search);
+    this.setState({ search: '' });
   };
 
   render() {
     return (
-      <header className={styles.searchbar}>
-        <form className={styles.searchForm} onSubmit={this.handleSubmit}>
+      <header className="Searchbar">
+        <form className="SearchForm" onSubmit={this.handleSubmit}>
+          <button type="submit" className="SearchForm-button">
+            <FcSearch size="24" />
+          </button>
+
           <input
-            onInput={this.handleInputChange}
-            className={styles.SearchFormInput}
+            onChange={this.handleChange}
+            value={this.state.search}
+            name="search"
+            className="SearchForm-input "
             type="text"
             autoComplete="off"
             autoFocus
             placeholder="Search images and photos"
-            value = {this.state.query}
           />
-          <button type="submit" className={styles.searchFormButton}>
-            search
-          </button>
         </form>
-        </header>
+      </header>
     );
   }
 }

@@ -1,89 +1,105 @@
-import React, { Component } from 'react';
+import { Component } from 'react';
+import { getImages } from 'service/pixabay_api';
+import { Searchbar } from './Searchbar/Searchbar';
+import { ImageGallery } from './ImageGallery/ImageGallery';
+import { Button } from './Button/Button';
+import { AppContainer, StartText, ErrorText } from './App.styled';
+import { Loader } from './Loader/Loader';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Searchbar from './Searchbar/Searchbar';
-import ImageGallery from './ImageGallery/ImageGallery';
-import Loader from './Loader/Loader';
-import Button from './Button/Button';
+import { Modal } from './Modal/Modal';
 
-export default class App extends Component {
+export class App extends Component {
   state = {
-    URL: 'https://pixabay.com/api/',
-    API_KEY: '34210482-0ff822678977a0c2e2014453a',
-    pictures: [],
-    error: '',
-    status: 'idle',
-    page: 1,
+    images: [],
     query: '',
-    totalHits: null,
+    page: 1,
+    isLoading: false,
+    showModal: false,
+    largeImage: '',
+    tags: '',
+    total: 0,
+    error: null,
   };
 
-  fetchImg = () => {
-    return fetch(
-      `${this.state.URL}?q=${this.state.query}&page=${this.state.page}&key=${this.state.API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
-    )
-      .then(res => {
-        if (res.ok) {
-          return res.json();
-        }
-        return Promise.reject(new Error('Failed to find any images'));
-      })
-      .then(pictures => {
-        if (!pictures.total) {
-          toast.error('Did find anything, mate');
-        }
-        const selectedProperties = pictures.hits.map(
-          ({ id, largeImageURL, webformatURL }) => {
-            return { id, largeImageURL, webformatURL };
-          }
-        );
-        this.setState(prevState => {
-          return {
-            pictures: [...prevState.pictures, ...selectedProperties],
-            status: 'resolved',
-            totalHits: pictures.total,
-          };
-        });
-      })
-      .catch(error => this.setState({ error, status: 'rejected' }));
-  };
-
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.query !== prevState.query) {
-      this.setState({ status: 'pending', pictures: [], page: 1 });
-      this.fetchImg();
-    }
-    if (
-      this.state.query === prevState.query &&
-      this.state.page !== prevState.page
-    ) {
-      this.setState({ status: 'pending' });
-      this.fetchImg();
+  componentDidUpdate(_, prevState) {
+    const { query, page } = this.state;
+    if (prevState.query !== query || prevState.page !== page) {
+      this.fetchImages(query, page);
     }
   }
 
-  processSubmit = query => {
-    this.setState({ query });
+  fetchImages = async (query, page) => {
+    try {
+      this.setState({ isLoading: true });
+      const data = await getImages(query, page);
+      if (data.hits.length === 0) {
+        return toast.error(
+          "We didn't find anything for this search :(  Try another option"
+        );
+      }
+      this.setState(({ images }) => ({
+        images: [...images, ...data.hits],
+        total: data.totalHits,
+      }));
+    } catch (error) {
+      this.setState({ error });
+    } finally {
+      this.setState({ isLoading: false });
+    }
   };
 
-  handleLoadMore = () => {
-    this.setState(prevState => {
-      return { page: prevState.page + 1 };
-    });
+  handlaSubmit = query => {
+    this.setState({ query, page: 1, images: [] });
   };
-  
+
+  onLoadMore = () => {
+    this.setState(prev => ({ page: prev.page + 1 }));
+  };
+
+  onOpenModal = (largeImage, tags) => {
+    this.setState({ showModal: true, largeImage, tags });
+  };
+
+  onCloseModal = () => {
+    this.setState({ showModal: false, largeImage: '', tags: '' });
+  };
+
   render() {
-    const { pictures, status, totalHits } = this.state;
+    const { images, isLoading, total, error, showModal, largeImage, tags } =
+      this.state;
+    const totalPage = total / images.length;
     return (
-      <>
-        <Searchbar onSubmit={this.processSubmit} />
-        {pictures.length && <ImageGallery images={pictures} />}
-        {totalHits > pictures.length && (
-          <Button onClick={this.handleLoadMore} />
+      <AppContainer>
+        <Searchbar onSubmit={this.handlaSubmit} />
+        {images.length === 0 && (
+          <StartText>
+            {' '}
+            Enter a query on the topic you are interested in
+          </StartText>
         )}
-        {status === 'pending' && <Loader />}
-        <ToastContainer autoClose={2000} />
-      </>
+        {isLoading && <Loader />}
+        {images.length !== 0 && (
+          <ImageGallery gallery={images} onOpenModal={this.onOpenModal} />
+        )}
+        {totalPage > 1 && !isLoading && images.length !== 0 && (
+          <Button onClick={this.onLoadMore} />
+        )}
+        {showModal && (
+          <Modal
+            largeImage={largeImage}
+            tags={tags}
+            onCloseModal={this.onCloseModal}
+          />
+        )}
+        {error && (
+          <ErrorText>
+            We didn't find anything for this search :(
+            <span>Try another option</span>
+          </ErrorText>
+        )}
+        <ToastContainer autoClose={2000} theme="dark" />
+      </AppContainer>
     );
   }
 }

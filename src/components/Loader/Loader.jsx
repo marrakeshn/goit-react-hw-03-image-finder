@@ -1,10 +1,24 @@
-import styles from './Loader.module.css';
-import SyncLoader from 'react-spinners/SyncLoader';
+import { MagnifyingGlass } from 'react-loader-spinner';
+import { ContainerLoader } from './Loader.styled';
 
-export default function Loader() {
+export const Loader = () => {
   return (
-    <div className={styles.loader}>
-      <SyncLoader size={20} speedMultiplier={0.5} color={'#461646'} className={styles.loader}/>
-    </div>
+    <ContainerLoader>
+      <MagnifyingGlass
+        height="320"
+        width="320"
+        ariaLabel="MagnifyingGlass-loading"
+        wrapperClass="MagnifyingGlass-wrapper"
+        glassColor="transparent"
+        color="#3f51b5"
+        wrapperStyle={{
+          position: 'absolute',
+          top: '50%',
+          left: ' 50%',
+          transform: 'translate(-50%, -50%)',
+        }}
+        visible={true}
+      />
+    </ContainerLoader>
   );
 };

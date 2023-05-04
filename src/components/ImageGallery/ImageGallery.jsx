@@ -1,63 +1,31 @@
-import React, { Component } from 'react';
-import styles from './ImageGallery.module.css';
-import ImageGalleryItem from 'components/ImageGalleryItem/ImageGalleryItem';
-import Modal from 'components/Modal/Modal';
-import { nanoid } from 'nanoid';
+import { ImageGalleryItem } from 'components/ImageGalleryItem/ImageGalleryItem';
 import PropTypes from 'prop-types';
 
-export default class ImageGallery extends Component {
-  state = {
-    showModal: false,
-    bigPic: null,
-  };
-
-  componentDidMount() {
-    document.addEventListener('click', e => {
-      if (e.target.nodeName !== 'IMG') {
-        this.setState({ showModal: false });
-        return;
-      } else {
-        let picture = this.props.images.filter(obj => {
-          return obj.id === parseInt(e.target.alt);
-        });
-        this.setState({ bigPic: picture[0].largeImageURL });
-      }
-    });
-  }
-
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({ showModal: !showModal }));
-  };
-
-  render() {
-    const { showModal, bigPic } = this.state;
-    return (
-      <>
-        <ul className={styles.gallery} onClick={this.toggleModal}>
-          {this.props.images.map(img => {
-            return (
-              <ImageGalleryItem
-                key={nanoid()}
-                smallImgURL={img.webformatURL}
-                id={img.id}
-              />
-            );
-          })}
-        </ul>
-        {showModal && bigPic && (
-          <Modal onClose={this.toggleModal} pic={bigPic} />
-        )}
-      </>
-    );
-  }
-}
+export const ImageGallery = ({ gallery, onOpenModal }) => {
+  
+  return (
+    <ul className="ImageGallery ">
+      {gallery.map(({ id, tags, webformatURL, largeImageURL }) => (
+        <ImageGalleryItem
+          key={id}
+          webformatURL={webformatURL}
+          tags={tags}
+          largeImageURL={largeImageURL}
+          onOpenModal={onOpenModal}
+        />
+      ))}
+    </ul>
+  );
+};
 
 ImageGallery.propTypes = {
-  images: PropTypes.arrayOf(
+  gallery: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.number.isRequired,
-      largeImageURL: PropTypes.string.isRequired,
       webformatURL: PropTypes.string.isRequired,
-    })
-  ),
+      tags: PropTypes.string.isRequired,
+      largeImageURL: PropTypes.string.isRequired,
+    }).isRequired
+  ).isRequired,
+  onOpenModal: PropTypes.func.isRequired,
 };
